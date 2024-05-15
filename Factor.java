@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Factor {
     // DATA
-    private List<Variable> variables;
+    private List<Variable> variables; // The ORDER of the vars is crucial
     private double[] prob;
 
     // CONSTRUCTORS
@@ -16,6 +16,6 @@ public class Factor {
     // METHODS
 
     public double[] getProb() {
-        return prob;
+        return this.prob;
     }
 }

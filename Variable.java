@@ -51,6 +51,10 @@ public class Variable {
         return this.name;
     }
 
+    public int getID() {
+        return this.ID;
+    }
+
     @Override
     public String toString() {
         HashMap<String, List<String>> ans = new HashMap<>();

@@ -9,13 +9,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 
 public class BayesianNetwork {
     // DATA
     private HashMap<String, Variable> varMap;
+
 
     // CONSTRUCTOR
     public BayesianNetwork(String path) {
@@ -119,8 +118,79 @@ public class BayesianNetwork {
     }
 
     // METHODS
+    private HashSet<Variable> bayesBall(Variable source, List<Variable> evidence) {
+        Set<Variable> result = new HashSet<>();
+        int size = this.varMap.size();
+        boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
+        Arrays.fill(visited, false); Arrays.fill(markedTop, false); Arrays.fill(markedBottom, false); Arrays.fill(observed, false);
+
+        for (Variable var : evidence) {
+            observed[var.getID()] = true;
+        }
+
+        final boolean fromChild = true, fromParent = false;
+
+        Queue<Boolean> fromWhom = new LinkedList<>();
+        fromWhom.add(fromChild);
+
+        Queue<Variable> scheduled = new LinkedList<>();
+        scheduled.add(source);
+
+        while (!scheduled.isEmpty()) {
+            Variable var = scheduled.poll();
+            int i = var.getID();
+            boolean from = fromWhom.poll();
+
+            visited[i] = true;
+
+            if (!observed[i] && from == fromChild) {
+                if (!markedTop[i]) {
+                    List<Variable> parents = var.getParents();
+                    if (parents != null) {
+                        for (Variable p : parents) {
+                            scheduled.add(p); fromWhom.add(fromChild);
+                        }
+                    }
+                    markedTop[i] = true;
+                }
+                if (!markedBottom[i]) {
+                    List<Variable> children = var.getChildren();
+                    if (children != null) {
+                        for (Variable child : children) {
+                            scheduled.add(child); fromWhom.add(fromParent);
+                        }
+                    }
+                    markedBottom[i] = true;
+                }
+            }
+            if (from == fromParent) {
+                if (observed[i] && !markedTop[i]) {
+                    List<Variable> parents = var.getParents();
+                    if (parents != null) {
+                        for (Variable p : parents) {
+                            scheduled.add(p); fromWhom.add(fromChild);
+                        }
+                    }
+                    markedTop[i] = true;
+                }
+                if (!observed[i] && !markedBottom[i]) {
+                    List<Variable> children = var.getChildren();
+                    if (children != null) {
+                        for (Variable child : children) {
+                            scheduled.add(child); fromWhom.add(fromParent);
+                        }
+                    }
+                    markedBottom[i] = true;
+                }
+            }
+
+        }
+
+        // Still need to decide what to return
+    }
 
     public HashMap<String, Variable> getVarMap() {
         return this.varMap;
     }
+
 }
