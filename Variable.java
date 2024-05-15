@@ -7,6 +7,7 @@ public class Variable {
     private String name;
     private List<Variable> parents, children;
     private List<String> outcomes;
+    private Factor cpt;
 
     // constructor
     public Variable(int id, String name) {
@@ -27,5 +28,9 @@ public class Variable {
 
     public void addOutcome(String outcome) {
         this.outcomes.add(outcome);
+    }
+
+    public void setCpt(Factor cpt) {
+        this.cpt = cpt;
     }
 }
