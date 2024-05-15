@@ -14,4 +14,8 @@ public class Factor {
     }
 
     // METHODS
+
+    public double[] getProb() {
+        return prob;
+    }
 }

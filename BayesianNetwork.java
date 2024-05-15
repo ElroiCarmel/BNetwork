@@ -10,6 +10,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 public class BayesianNetwork {
@@ -90,6 +91,18 @@ public class BayesianNetwork {
                                 tempProb[j] = Double.parseDouble(tableSplit[j]);
                             }
                         }
+                        if (tempVarList.size() > 1) {
+                            Variable child = tempVarList.getLast();
+                            Variable parent;
+                            Iterator<Variable> it = tempVarList.iterator();
+                            while (it.hasNext()) {
+                                parent = it.next();
+                                if (!it.hasNext()) break;
+                                parent.addChild(child);
+                                child.addParent(parent);
+                            }
+
+                        }
                         tempVarList.getLast().setCpt(new Factor(tempVarList, tempProb));
                         tempVarList.clear();
                     }
@@ -106,4 +119,8 @@ public class BayesianNetwork {
     }
 
     // METHODS
+
+    public HashMap<String, Variable> getVarMap() {
+        return this.varMap;
+    }
 }
