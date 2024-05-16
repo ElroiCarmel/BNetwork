@@ -30,7 +30,7 @@ public class Factor {
         int product = 1;
         for (int i = len - 1; i >= 0 ; i--) {
             this.indexScale[i] = product;
-            product *= variables.get(i).size();
+            product *= this.variables.get(i).size();
         }
     }
 
@@ -40,7 +40,7 @@ public class Factor {
         int[] indices = new int[state.size()];
         for (int i = 0; i < state.size(); i++) {
             String s = state.get(i);
-            Variable v = variables.get(i);
+            Variable v = this.variables.get(i);
             indices[i] = v.getOutcomeIndex(s);
         }
         int ans = 0;
@@ -55,6 +55,26 @@ public class Factor {
         return this.probTable[index];
     }
 
+    private Factor restrict(Variable var, String state) {
+        if (this.variables.size() == 1) return null;
+
+        // Copy factor variables to a list
+        LinkedList<Variable> f2Vars = new LinkedList<>(this.variables);
+
+        return null;
+    }
+
+    private Factor sumOut(Variable var) {
+        return null;
+    }
+
+    private Factor multiply(Factor f) {
+        return null;
+    }
+
+    private Factor normalize() {
+        return null;
+    }
 
     public double[] getTable() {
         return this.probTable;
@@ -62,5 +82,9 @@ public class Factor {
 
     public List<Variable> getVariables() {
         return this.variables;
+    }
+
+    public int size() {
+        return this.probTable.length;
     }
 }
