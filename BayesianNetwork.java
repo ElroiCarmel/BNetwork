@@ -118,14 +118,26 @@ public class BayesianNetwork {
     }
 
     // METHODS
-    private HashSet<Variable> bayesBall(Variable source, List<Variable> evidence) {
+
+    /**
+     * Implementation of Bayes-Ball algorithm to detect dependency relations
+     * between variables in the bayesian network. Will be used for Queries.
+     * I made the version for a single source variable
+     * @param source The ball starts at the source variable
+     * @param evidence List of the observed variables
+     * @return Boolean array that states "true" if the ball passed through that variable and "false" otherwise.
+     *         Index in the array stand for the correspondent variable ID
+     */
+    public boolean[] bayesBall(Variable source, List<Variable> evidence) {
         Set<Variable> result = new HashSet<>();
         int size = this.varMap.size();
         boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
         Arrays.fill(visited, false); Arrays.fill(markedTop, false); Arrays.fill(markedBottom, false); Arrays.fill(observed, false);
 
-        for (Variable var : evidence) {
-            observed[var.getID()] = true;
+        if (evidence != null) {
+            for (Variable var : evidence) {
+                observed[var.getID()] = true;
+            }
         }
 
         final boolean fromChild = true, fromParent = false;
@@ -186,7 +198,7 @@ public class BayesianNetwork {
 
         }
 
-        // Still need to decide what to return
+        return visited;
     }
 
     public HashMap<String, Variable> getVarMap() {

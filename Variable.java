@@ -55,10 +55,22 @@ public class Variable {
         return this.ID;
     }
 
+    public int size() {
+        return this.outcomes.size();
+    }
+
+    public List<String> getOutcomes() {
+        return this.outcomes;
+    }
+
     @Override
     public String toString() {
         HashMap<String, List<String>> ans = new HashMap<>();
         ans.put(name, this.outcomes);
         return ans.toString();
+    }
+
+    public int getOutcomeIndex(String s) {
+        return this.outcomes.indexOf(s);
     }
 }
