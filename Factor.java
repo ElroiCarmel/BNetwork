@@ -55,13 +55,36 @@ public class Factor {
         return this.probTable[index];
     }
 
-    private Factor restrict(Variable var, String state) {
+    public void setProb(List<String> state, double num) {
+        int index = getIndex(state);
+        this.probTable[index] = num;
+    }
+
+    public Factor restrict(Variable var, String state) {
         if (this.variables.size() == 1) return null;
 
-        // Copy factor variables to a list
-        LinkedList<Variable> f2Vars = new LinkedList<>(this.variables);
+        // Copy factor variables to a list and remove the observed var
+        List<Variable> f2Vars = new LinkedList<>(this.variables);
+        int varIndex = this.variables.indexOf(var);
+        f2Vars.remove(varIndex);
+        Factor ans = new Factor(f2Vars);
 
-        return null;
+        List<String> original = new LinkedList<>(), generated = new LinkedList<>();
+
+        OutcomeIterator it = OutcomeIterator.getInstance(f2Vars);
+        while (it.hasNext()) {
+            String[] curr = it.next();
+            for (int i = 0; i < curr.length ; i++) {
+                generated.add(curr[i]);
+                original.add(curr[i]);
+            }
+            original.add(varIndex, state);
+            double retrieved = this.getProb(original);
+            ans.setProb(generated, retrieved);
+            original.clear();
+            generated.clear();
+        }
+        return ans;
     }
 
     private Factor sumOut(Variable var) {

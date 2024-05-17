@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,7 +15,7 @@ public class Variable {
     public Variable(int id, String name) {
         this.ID = id;
         this.name = name;
-        this.outcomes = new LinkedList<>();
+        this.outcomes = new ArrayList<>();
     }
     //methods
     public void addParent(Variable var) {
