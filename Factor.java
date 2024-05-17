@@ -74,9 +74,9 @@ public class Factor {
         OutcomeIterator it = OutcomeIterator.getInstance(f2Vars);
         while (it.hasNext()) {
             String[] curr = it.next();
-            for (int i = 0; i < curr.length ; i++) {
-                generated.add(curr[i]);
-                original.add(curr[i]);
+            for (String s : curr) {
+                generated.add(s);
+                original.add(s);
             }
             original.add(varIndex, state);
             double retrieved = this.getProb(original);
@@ -87,8 +87,34 @@ public class Factor {
         return ans;
     }
 
-    private Factor sumOut(Variable var) {
-        return null;
+    public Factor sumOut(Variable var) {
+        if (this.variables.size() == 1) return null;
+
+        List<Variable> f2Vars = new LinkedList<>(this.variables);
+        int varIndex = this.variables.indexOf(var);
+        f2Vars.remove(varIndex);
+        Factor ans = new Factor(f2Vars);
+
+        List<String> helper = new LinkedList<>();
+        List<String> varOutcomes = var.getOutcomes();
+        Iterator<String> varOutcomeIT;
+
+        OutcomeIterator it = OutcomeIterator.getInstance(f2Vars);
+        while (it.hasNext()) {
+            varOutcomeIT = varOutcomes.iterator();
+            String[] curr = it.next();
+            double pr = 0;
+            helper.addAll(Arrays.asList(curr));
+            while (varOutcomeIT.hasNext()) {
+                String outcome = varOutcomeIT.next();
+                helper.add(varIndex, outcome);
+                pr += getProb(helper);
+                helper.remove(varIndex);
+            }
+            ans.setProb(helper, pr);
+            helper.clear();
+        }
+        return ans;
     }
 
     private Factor multiply(Factor f) {
