@@ -1,5 +1,7 @@
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Factor {
     // DATA
@@ -22,6 +24,13 @@ public class Factor {
         }
         this.probTable = new double[len];
         setIndexScale();
+    }
+
+    // Copy constructor
+    public Factor(Factor f){
+        this.variables = new ArrayList<>(f.variables);
+        this.probTable = Arrays.copyOf(f.probTable, f.probTable.length);
+        this.indexScale = Arrays.copyOf(f.indexScale, f.indexScale.length);
     }
 
     private void setIndexScale() {
@@ -117,12 +126,48 @@ public class Factor {
         return ans;
     }
 
-    private Factor multiply(Factor f) {
-        return null;
+    public Factor multiply(Factor f) {
+        Set<Variable> union = new LinkedHashSet<>(this.variables); union.addAll(f.variables);
+        List<Variable> unionL = new LinkedList<>(union);
+        Factor ans = new Factor(unionL);
+
+        List<Integer> leftIndices = new LinkedList<>(), rightIndices = new LinkedList<>();
+        Iterator<Variable> leftIT = this.variables.iterator(), rightIT = f.variables.iterator();
+        while (leftIT.hasNext()) {
+            leftIndices.add(unionL.indexOf(leftIT.next()));
+        }
+        while (rightIT.hasNext()) {
+            rightIndices.add(unionL.indexOf(rightIT.next()));
+        }
+
+        OutcomeIterator it = OutcomeIterator.getInstance(unionL);
+        List<String> leftOutcome = new LinkedList<>(), rightOutcome = new LinkedList<>(), unionOutcome = new ArrayList<>();
+
+        while (it.hasNext()) {
+            String[] outcome = it.next();
+            for (String o : outcome) {
+                unionOutcome.add(o);
+            }
+            for (Iterator<Integer> lit = leftIndices.iterator(); lit.hasNext();) {
+                leftOutcome.add(outcome[lit.next()]);
+            }
+
+            for (Iterator<Integer> rit = rightIndices.iterator();rit.hasNext();) {
+                rightOutcome.add(outcome[rit.next()]);
+            }
+            double p1 = this.getProb(leftOutcome), p2 = f.getProb(rightOutcome);
+            ans.setProb(unionOutcome, p1 * p2);
+            leftOutcome.clear(); rightOutcome.clear(); unionOutcome.clear();
+        }
+
+        return ans;
     }
 
-    private Factor normalize() {
-        return null;
+    public Factor normalize() {
+        Factor ans = new Factor(this);
+        double sum = Arrays.stream(ans.probTable).sum();
+        ans.probTable = Arrays.stream(ans.probTable).map(x -> x / sum).toArray();
+        return ans;
     }
 
     public double[] getTable() {
