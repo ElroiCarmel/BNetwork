@@ -123,16 +123,20 @@ public class BayesianNetwork {
      * Implementation of Bayes-Ball algorithm to detect dependency relations
      * between variables in the bayesian network. Will be used for Queries.
      * I made the version for a single source variable
-     * @param source The ball starts at the source variable
+     *
+     * @param source   The ball starts at the source variable
      * @param evidence List of the observed variables
      * @return Boolean array that states "true" if the ball passed through that variable and "false" otherwise.
-     *         Index in the array stand for the correspondent variable ID
+     * Index in the array stand for the correspondent variable ID
      */
     private boolean[] bayesBall(Variable source, List<Variable> evidence) {
         Set<Variable> result = new HashSet<>();
         int size = this.varMap.size();
         boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
-        Arrays.fill(visited, false); Arrays.fill(markedTop, false); Arrays.fill(markedBottom, false); Arrays.fill(observed, false);
+        Arrays.fill(visited, false);
+        Arrays.fill(markedTop, false);
+        Arrays.fill(markedBottom, false);
+        Arrays.fill(observed, false);
 
         if (evidence != null) {
             for (Variable var : evidence) {
@@ -160,7 +164,8 @@ public class BayesianNetwork {
                     List<Variable> parents = var.getParents();
                     if (parents != null) {
                         for (Variable p : parents) {
-                            scheduled.add(p); fromWhom.add(fromChild);
+                            scheduled.add(p);
+                            fromWhom.add(fromChild);
                         }
                     }
                     markedTop[i] = true;
@@ -169,7 +174,8 @@ public class BayesianNetwork {
                     List<Variable> children = var.getChildren();
                     if (children != null) {
                         for (Variable child : children) {
-                            scheduled.add(child); fromWhom.add(fromParent);
+                            scheduled.add(child);
+                            fromWhom.add(fromParent);
                         }
                     }
                     markedBottom[i] = true;
@@ -180,7 +186,8 @@ public class BayesianNetwork {
                     List<Variable> parents = var.getParents();
                     if (parents != null) {
                         for (Variable p : parents) {
-                            scheduled.add(p); fromWhom.add(fromChild);
+                            scheduled.add(p);
+                            fromWhom.add(fromChild);
                         }
                     }
                     markedTop[i] = true;
@@ -189,7 +196,8 @@ public class BayesianNetwork {
                     List<Variable> children = var.getChildren();
                     if (children != null) {
                         for (Variable child : children) {
-                            scheduled.add(child); fromWhom.add(fromParent);
+                            scheduled.add(child);
+                            fromWhom.add(fromParent);
                         }
                     }
                     markedBottom[i] = true;
@@ -222,7 +230,33 @@ public class BayesianNetwork {
         return visited;
     }
 
-    public ProResult answerByVE(HashMap<Variable, String> target, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
+    public ProResult answer(ProQuery query) {
+        // TODO Test the cpt check works fine
+        Variable varTarget = query.getTarget().keySet().toArray(new Variable[0])[0];
+        Factor cpt = varTarget.getCpt();
+        List<Variable> parents = varTarget.getParents();
+        HashMap<Variable, String> ev = query.getEvidence();
+        if (parents.size() == ev.size() && parents.containsAll(ev.keySet())) {
+            List<String> state = new LinkedList<>();
+            for (Variable v : cpt.getVariables()) {
+                state.add(ev.get(v));
+            }
+            state.add(query.getTarget().values().toArray(new String[0])[0]);
+            double pr = cpt.getProb(state);
+            return new ProResult(pr, 0, 0);
+        } else {
+            return answerByVE(query.getTarget(), query.getEvidence(), query.getHidden());
+        }
+    }
+
+    /* Returns true if they are independent*/
+    public boolean answer(IndQuery query) {
+        Variable source = query.getVars()[0];
+        boolean[] visited = bayesBall(query.getVars()[0], query.getObserved());
+        return !visited[source.getID()];
+    }
+
+    private ProResult answerByVE(HashMap<Variable, String> target, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
 
         Variable vtemp = target.keySet().toArray(new Variable[0])[0];
         List<Variable> evidencetemp = new LinkedList<>(evidence.keySet());
@@ -245,8 +279,9 @@ public class BayesianNetwork {
          */
         if (evidence != null) {
             for (Map.Entry<Variable, String> entry : evidence.entrySet()) {
-                Variable v = entry.getKey(); String state = entry.getValue();
-                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext();) {
+                Variable v = entry.getKey();
+                String state = entry.getValue();
+                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext(); ) {
                     Factor f = it.next();
                     if (f.contains(v)) {
                         Factor restricted = f.restrict(v, state);
@@ -270,9 +305,9 @@ public class BayesianNetwork {
         if (hidden != null) {
             while (!hidden.isEmpty()) {
                 Variable toEliminate = hidden.poll();
-                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext();) {
+                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext(); ) {
                     Factor f = it.next();
-                    if (f.contains(toEliminate)){
+                    if (f.contains(toEliminate)) {
                         pq.add(f);
                         it.remove();
                     }
@@ -305,7 +340,8 @@ public class BayesianNetwork {
 
     private List<Variable> getRelevantNodes(Variable query, List<Variable> evidence) {
         boolean[] bb = bayesBall(query, evidence);
-        List<Variable> src = new LinkedList<>(evidence); src.add(query);
+        List<Variable> src = new LinkedList<>(evidence);
+        src.add(query);
         boolean[] bfs = reversedBFS(src);
         System.out.println(Arrays.toString(bfs));
         List<Variable> ans = new LinkedList<>();
@@ -320,8 +356,8 @@ public class BayesianNetwork {
         return this.varMap;
     }
 
-}
 
+}
 class ProResult {
     private double probability;
     private int mul, add;
@@ -346,7 +382,6 @@ class ProResult {
 
     @Override
     public String toString() {
-        String ans = "Probability: " + this.probability + ", #+ = " + this.add + ", #* = " + this.mul;
-        return ans;
+        return String.format("%.5f,%d,%d", this.probability, this.add, this.mul);
     }
 }
