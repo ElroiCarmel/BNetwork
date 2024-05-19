@@ -3,17 +3,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Factor {
+public class Factor implements Comparable<Factor> {
     // DATA
     private ArrayList<Variable> variables; // The ORDER of the vars is crucial
     private double[] probTable;
     private int[] indexScale;
+    private int compASCII = 0;
 
     // CONSTRUCTORS
     public Factor(List<Variable> variables, double[] prob) {
         this.variables = new ArrayList<>(variables);
         this.probTable = Arrays.copyOf(prob, prob.length);
-        setIndexScale();
+        setIndexScale(); setComparingHelper();
     }
 
     public Factor(List<Variable> variables) {
@@ -23,7 +24,7 @@ public class Factor {
             len = len * v.size();
         }
         this.probTable = new double[len];
-        setIndexScale();
+        setIndexScale(); setComparingHelper();
     }
 
     // Copy constructor
@@ -31,6 +32,16 @@ public class Factor {
         this.variables = new ArrayList<>(f.variables);
         this.probTable = Arrays.copyOf(f.probTable, f.probTable.length);
         this.indexScale = Arrays.copyOf(f.indexScale, f.indexScale.length);
+        this.compASCII = f.compASCII;
+    }
+
+    private void setComparingHelper() {
+        for (Variable variable : variables) {
+            String name = variable.getName();
+            for (int i = 0; i < name.length(); i++) {
+                compASCII += (int) name.charAt(i);
+            }
+        }
     }
 
     private void setIndexScale() {
@@ -126,6 +137,22 @@ public class Factor {
         return ans;
     }
 
+    /**
+     * A simple multiply a chain of factors
+     * @param factors The factors we want to reduce to one factor
+     * @return The total amount of multiplications needed in the process
+     */
+    public static int multiply(Queue<Factor> factors) {
+        int ans = 0;
+        while (factors.size() > 1) {
+            Factor f1 = factors.poll(), f2 = factors.poll();
+            Factor product = f1.multiply(f2);
+            ans += product.size();
+            factors.add(product);
+        }
+        return ans;
+    }
+
     public Factor multiply(Factor f) {
         Set<Variable> union = new LinkedHashSet<>(this.variables); union.addAll(f.variables);
         List<Variable> unionL = new LinkedList<>(union);
@@ -145,15 +172,13 @@ public class Factor {
 
         while (it.hasNext()) {
             String[] outcome = it.next();
-            for (String o : outcome) {
-                unionOutcome.add(o);
-            }
-            for (Iterator<Integer> lit = leftIndices.iterator(); lit.hasNext();) {
-                leftOutcome.add(outcome[lit.next()]);
+            unionOutcome.addAll(Arrays.asList(outcome));
+            for (Integer leftIndex : leftIndices) {
+                leftOutcome.add(outcome[leftIndex]);
             }
 
-            for (Iterator<Integer> rit = rightIndices.iterator();rit.hasNext();) {
-                rightOutcome.add(outcome[rit.next()]);
+            for (Integer rightIndex : rightIndices) {
+                rightOutcome.add(outcome[rightIndex]);
             }
             double p1 = this.getProb(leftOutcome), p2 = f.getProb(rightOutcome);
             ans.setProb(unionOutcome, p1 * p2);
@@ -180,5 +205,17 @@ public class Factor {
 
     public int size() {
         return this.probTable.length;
+    }
+
+    public boolean contains(Variable v) {
+        return variables.contains(v);
+    }
+
+    @Override
+    public int compareTo(Factor o) {
+        if (this.size() == o.size()) {
+            return this.compASCII - o.compASCII;
+        }
+        return this.size() - o.size();
     }
 }

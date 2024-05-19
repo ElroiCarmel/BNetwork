@@ -128,7 +128,7 @@ public class BayesianNetwork {
      * @return Boolean array that states "true" if the ball passed through that variable and "false" otherwise.
      *         Index in the array stand for the correspondent variable ID
      */
-    public boolean[] bayesBall(Variable source, List<Variable> evidence) {
+    private boolean[] bayesBall(Variable source, List<Variable> evidence) {
         Set<Variable> result = new HashSet<>();
         int size = this.varMap.size();
         boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
@@ -201,8 +201,152 @@ public class BayesianNetwork {
         return visited;
     }
 
+    private boolean[] reversedBFS(List<Variable> sources) {
+        boolean[] visited = new boolean[this.varMap.size()];
+        Arrays.fill(visited, false);
+        for (Variable source : sources) {
+            visited[source.getID()] = true;
+        }
+        Queue<Variable> q = new LinkedList<>(sources);
+        while (!q.isEmpty()) {
+            List<Variable> parents = q.poll().getParents();
+            if (parents != null) {
+                for (Variable p : parents) {
+                    if (!visited[p.getID()]) {
+                        q.add(p);
+                        visited[p.getID()] = true;
+                    }
+                }
+            }
+        }
+        return visited;
+    }
+
+    public ProResult answerByVE(HashMap<Variable, String> target, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
+
+        Variable vtemp = target.keySet().toArray(new Variable[0])[0];
+        List<Variable> evidencetemp = new LinkedList<>(evidence.keySet());
+
+        List<Variable> filtered = getRelevantNodes(vtemp, evidencetemp);
+
+        System.out.println(filtered);
+
+
+        int mulCount = 0, addCount = 0;
+        // 1. Construct a factor for each relevant node in the network
+        List<Factor> factors = new LinkedList<>();
+        for (Variable v : filtered) {
+            factors.add(v.getCpt());
+        }
+
+        /*
+           2. For each evidence variable and for each factor that contains the evidence variable, restrict the
+         factor by assigning the observed value to the evidence variable.
+         */
+        if (evidence != null) {
+            for (Map.Entry<Variable, String> entry : evidence.entrySet()) {
+                Variable v = entry.getKey(); String state = entry.getValue();
+                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext();) {
+                    Factor f = it.next();
+                    if (f.contains(v)) {
+                        Factor restricted = f.restrict(v, state);
+                        if (restricted != null) {
+                            it.set(restricted);
+                        } else {
+                            it.remove();
+                        }
+                    }
+                }
+            }
+        }
+
+
+        /*
+           3. Eliminate each hidden variable X:
+            - Multiply all factors that contain X
+            - Sum out the variable X from the product factor
+         */
+        PriorityQueue<Factor> pq = new PriorityQueue<>();
+        if (hidden != null) {
+            while (!hidden.isEmpty()) {
+                Variable toEliminate = hidden.poll();
+                for (ListIterator<Factor> it = factors.listIterator(); it.hasNext();) {
+                    Factor f = it.next();
+                    if (f.contains(toEliminate)){
+                        pq.add(f);
+                        it.remove();
+                    }
+                }
+                if (!pq.isEmpty()) {
+                    mulCount += Factor.multiply(pq);
+                    // Priority queue should contain only 1 element
+                    Factor f = pq.poll();
+                    Factor afterSummation = f.sumOut(toEliminate);
+                    if (afterSummation != null) {
+                        addCount += afterSummation.size() * (toEliminate.size() - 1);
+                        factors.add(afterSummation);
+                    } else {
+                        addCount += toEliminate.size() - 1;
+                    }
+                }
+            }
+        }
+
+        // 4. Multiply the remaining factors
+        pq.addAll(factors);
+        mulCount += Factor.multiply(pq);
+        // 5. Normalize the factor
+        Factor last = pq.poll().normalize();
+        addCount += vtemp.size() - 1;
+        double ans = last.getProb(Arrays.asList(target.values().iterator().next()));
+
+        return new ProResult(ans, mulCount, addCount);
+    }
+
+    private List<Variable> getRelevantNodes(Variable query, List<Variable> evidence) {
+        boolean[] bb = bayesBall(query, evidence);
+        List<Variable> src = new LinkedList<>(evidence); src.add(query);
+        boolean[] bfs = reversedBFS(src);
+        System.out.println(Arrays.toString(bfs));
+        List<Variable> ans = new LinkedList<>();
+        for (Variable v : this.varMap.values()) {
+            if (bb[v.getID()] && bfs[v.getID()]) ans.add(v);
+        }
+        return ans;
+    }
+
+
     public HashMap<String, Variable> getVarMap() {
         return this.varMap;
     }
 
+}
+
+class ProResult {
+    private double probability;
+    private int mul, add;
+
+    public ProResult(double probability, int multiplication, int additions) {
+        this.probability = probability;
+        this.mul = multiplication;
+        this.add = additions;
+    }
+
+    public double getProbability() {
+        return probability;
+    }
+
+    public int getMul() {
+        return mul;
+    }
+
+    public int getAdd() {
+        return add;
+    }
+
+    @Override
+    public String toString() {
+        String ans = "Probability: " + this.probability + ", #+ = " + this.add + ", #* = " + this.mul;
+        return ans;
+    }
 }
