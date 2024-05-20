@@ -66,9 +66,7 @@ public class Variable {
 
     @Override
     public String toString() {
-        HashMap<String, List<String>> ans = new HashMap<>();
-        ans.put(name, this.outcomes);
-        return ans.toString();
+        return "Name: " + name + ". Outcomes: " + outcomes;
     }
 
     public int getOutcomeIndex(String s) {

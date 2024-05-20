@@ -2,49 +2,57 @@ import java.util.*;
 
 public abstract class QueryFactory {
 
-    public static void main(String[] args) {
-        String test = "P(B=T|J=T,M=T)";
-        System.out.println(Arrays.toString(test.split("\\) ")));
-
-
-//        if (test.startsWith("P(")) {
-//            test = test.substring(2);
-//            String[] s2 = test.split("\\|");
-//            String[] target = s2[0].split("=");
-//            String[] s3 = s2[1].split("\\) ");
-//            String[] ev = s3[0].split(",");
-//            System.out.println(Arrays.toString(ev));
-//        } else {
-//
-//        }
-
-    }
-
-    public static ProQuery parseToProQuery(String s, BayesianNetwork bn) {
+    public static ProQuery parseToProQuery(String s, BayesianNetwork bn) throws NoSuchElementException{
         ProQuery ans = new ProQuery();
-        s = s.substring(2);
-        String[] s2 = s.split("\\|");
-        String[] target = s2[0].split("=");
-        String[] s3 = s2[1].split("\\) ");
-        String[] ev = s3[0].split(",");
-        String[] hid = s3[1].split("-");
-        HashMap<Variable, String> targetHM = new HashMap<>();
-        Variable targetVar = bn.getVar(target[0]);
-        if (targetVar != null) ans.setTarget(targetVar, target[1]);
-        for (String evstr : ev) {
-            String[] splitted = evstr.split("=");
-            Variable evVar = bn.getVar(splitted[0]);
-            if (evVar != null) ans.addEvidence(evVar, splitted[1]);
+        int i = s.indexOf('('), j = s.indexOf('|'), k = s.indexOf(')');
+        String targetStr = s.substring(i+1, j), evidenceStr = s.substring(j+1, k);
+        String[] tarSplt = targetStr.split("=");
+        Variable tarVar = bn.getVar(tarSplt[0]);
+        if (tarVar == null) throw new NoSuchElementException();
+        ans.setTarget(tarVar, tarSplt[1]);
+        String[] evSplt = evidenceStr.split(",");
+        for (String ev : evSplt) {
+            String[] split = ev.split("=");
+            Variable evidVar = bn.getVar(split[0]);
+            if (evidVar == null) throw new NoSuchElementException();
+            ans.addEvidence(evidVar, split[1]);
         }
-        for (String hidstr : hid) {
-            Variable hidVar = bn.getVar(hidstr);
-            if (hidVar != null) ans.addHidden(hidVar);
+        if (k < s.length() - 2) {
+            String hidStr = s.substring(k+2);
+            String[] hidSplt = hidStr.split("-");
+            for (String hid : hidSplt) {
+                Variable hidVar = bn.getVar(hid);
+                if (hidVar == null) throw new NoSuchElementException();
+                ans.addHidden(hidVar);
+            }
         }
         return ans;
     }
 
-    public static IndQuery parseToIndQuery(String s, BayesianNetwork bn) {
-        return null;
+    public static IndQuery parseToIndQuery(String s, BayesianNetwork bn) throws NoSuchElementException{
+        int i = s.indexOf("|");
+        String targetStr = s.substring(0, i);
+        IndQuery ans = new IndQuery();
+        String[] targetSplt = targetStr.split("-");
+        Variable[] tarVars = new Variable[2];
+        int j = 0;
+        for (String tar : targetSplt) {
+            Variable v = bn.getVar(tar);
+            if (v == null) throw new NoSuchElementException();
+            tarVars[j++] = v;
+        }
+        ans.setTwoVars(tarVars);
+        if (i < s.length() - 1) {
+            String obs = s.substring(i+1);
+            String[] obsSplt = obs.split(",");
+            for (String obsStr : obsSplt) {
+                String varName = obsStr.split("=")[0];
+                Variable v = bn.getVar(varName);
+                if (v == null) throw new NoSuchElementException();
+                ans.addObserved(v);
+            }
+        }
+        return ans;
     }
 
 
@@ -52,11 +60,10 @@ public abstract class QueryFactory {
 
 class IndQuery {
     private Variable[] vars;
-    private List<Variable> observed;
+    private List<Variable> observed = null;
 
     public IndQuery() {
         this.vars = new Variable[2];
-        this.observed = new LinkedList<>();
     }
 
     public void setTwoVars(Variable v1, Variable v2) {
@@ -68,6 +75,7 @@ class IndQuery {
     }
 
     public void addObserved(Variable v) {
+        if (observed == null) observed = new LinkedList<>();
         this.observed.add(v);
     }
 
@@ -78,16 +86,17 @@ class IndQuery {
     public Variable[] getVars() {
         return vars;
     }
+
+
 }
 
 class ProQuery {
     private HashMap<Variable, String> target, evidence;
-    private Queue<Variable> hidden;
+    private Queue<Variable> hidden = null;
 
     public ProQuery() {
         this.target = new HashMap<>();
         this.evidence = new HashMap<>();
-        this.hidden = new LinkedList<>();
     }
 
     public void setTarget(Variable var, String outcome) {
@@ -99,6 +108,7 @@ class ProQuery {
     }
 
     public void addHidden(Variable v) {
+        if (hidden == null) hidden = new LinkedList<>();
         this.hidden.add(v);
     }
 
@@ -114,12 +124,21 @@ class ProQuery {
         return hidden;
     }
 
+}
+
+class ProResult {
+    private double probability;
+    private int mul, add;
+
+    public ProResult(double probability, int multiplication, int additions) {
+        this.probability = probability;
+        this.mul = multiplication;
+        this.add = additions;
+    }
+
+
     @Override
     public String toString() {
-        return "ProQuery{" +
-                "target=" + target +
-                ", evidence=" + evidence +
-                ", hidden=" + hidden +
-                '}';
+        return String.format("%.5f,%d,%d", this.probability, this.add, this.mul);
     }
 }
