@@ -1,17 +1,50 @@
 import java.util.*;
 
 public abstract class QueryFactory {
-    public static void main(String[] args) {
-        String test = "B-E|J=T,X=F";
-        String[] split = test.split("\\|");
-        String[] vars = split[0].split("-");
-        System.out.println(Arrays.toString(vars));
-        if (split.length > 1) {
-            String[] obs = split[1].split("[=,]");
-            System.out.println(Arrays.toString(obs));
-        }
-        List<Integer> l = new ArrayList<>();
 
+    public static void main(String[] args) {
+        String test = "P(B=T|J=T,M=T)";
+        System.out.println(Arrays.toString(test.split("\\) ")));
+
+
+//        if (test.startsWith("P(")) {
+//            test = test.substring(2);
+//            String[] s2 = test.split("\\|");
+//            String[] target = s2[0].split("=");
+//            String[] s3 = s2[1].split("\\) ");
+//            String[] ev = s3[0].split(",");
+//            System.out.println(Arrays.toString(ev));
+//        } else {
+//
+//        }
+
+    }
+
+    public static ProQuery parseToProQuery(String s, BayesianNetwork bn) {
+        ProQuery ans = new ProQuery();
+        s = s.substring(2);
+        String[] s2 = s.split("\\|");
+        String[] target = s2[0].split("=");
+        String[] s3 = s2[1].split("\\) ");
+        String[] ev = s3[0].split(",");
+        String[] hid = s3[1].split("-");
+        HashMap<Variable, String> targetHM = new HashMap<>();
+        Variable targetVar = bn.getVar(target[0]);
+        if (targetVar != null) ans.setTarget(targetVar, target[1]);
+        for (String evstr : ev) {
+            String[] splitted = evstr.split("=");
+            Variable evVar = bn.getVar(splitted[0]);
+            if (evVar != null) ans.addEvidence(evVar, splitted[1]);
+        }
+        for (String hidstr : hid) {
+            Variable hidVar = bn.getVar(hidstr);
+            if (hidVar != null) ans.addHidden(hidVar);
+        }
+        return ans;
+    }
+
+    public static IndQuery parseToIndQuery(String s, BayesianNetwork bn) {
+        return null;
     }
 
 
@@ -79,5 +112,14 @@ class ProQuery {
 
     public Queue<Variable> getHidden() {
         return hidden;
+    }
+
+    @Override
+    public String toString() {
+        return "ProQuery{" +
+                "target=" + target +
+                ", evidence=" + evidence +
+                ", hidden=" + hidden +
+                '}';
     }
 }
