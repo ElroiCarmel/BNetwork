@@ -230,17 +230,30 @@ public class BayesianNetwork {
         return visited;
     }
 
-    public ProResult answer(ProQuery query) {
+    public String answer(String query) {
+        if (query.startsWith("P(")) {
+            ProQuery probQuery = QueryFactory.parseToProQuery(query, this);
+            ProResult result = answer(probQuery);
+            return result.toString();
+        } else {
+            IndQuery indQuery = QueryFactory.parseToIndQuery(query, this);
+            boolean result = answer(indQuery);
+            return (result) ? "yes" : "no";
+        }
+    }
+
+    private ProResult answer(ProQuery query) {
         // TODO Test the cpt check works fine
         Variable varTarget = query.getTarget().keySet().toArray(new Variable[0])[0];
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
         HashMap<Variable, String> ev = query.getEvidence();
-        if (parents.size() == ev.size() && parents.containsAll(ev.keySet())) {
-            List<String> state = new LinkedList<>();
+        if (parents!= null && ev!= null && parents.size() == ev.size() && parents.containsAll(ev.keySet())) {
+            LinkedList<String> state = new LinkedList<>();
             for (Variable v : cpt.getVariables()) {
                 state.add(ev.get(v));
             }
+            state.removeLast();
             state.add(query.getTarget().values().toArray(new String[0])[0]);
             double pr = cpt.getProb(state);
             return new ProResult(pr, 0, 0);
@@ -250,10 +263,10 @@ public class BayesianNetwork {
     }
 
     /* Returns true if they are independent*/
-    public boolean answer(IndQuery query) {
-        Variable source = query.getVars()[0];
-        boolean[] visited = bayesBall(query.getVars()[0], query.getObserved());
-        return !visited[source.getID()];
+    private boolean answer(IndQuery query) {
+        Variable source = query.getVars()[0], dest = query.getVars()[1];
+        boolean[] visited = bayesBall(source, query.getObserved());
+        return !visited[dest.getID()];
     }
 
     private ProResult answerByVE(HashMap<Variable, String> target, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
@@ -263,7 +276,6 @@ public class BayesianNetwork {
 
         List<Variable> filtered = getRelevantNodes(vtemp, evidencetemp);
 
-        System.out.println(filtered);
 
 
         int mulCount = 0, addCount = 0;
@@ -343,7 +355,6 @@ public class BayesianNetwork {
         List<Variable> src = new LinkedList<>(evidence);
         src.add(query);
         boolean[] bfs = reversedBFS(src);
-        System.out.println(Arrays.toString(bfs));
         List<Variable> ans = new LinkedList<>();
         for (Variable v : this.varMap.values()) {
             if (bb[v.getID()] && bfs[v.getID()]) ans.add(v);
@@ -356,32 +367,9 @@ public class BayesianNetwork {
         return this.varMap;
     }
 
+    public Variable getVar(String s) {
+        return this.varMap.get(s);
+    }
 
 }
-class ProResult {
-    private double probability;
-    private int mul, add;
 
-    public ProResult(double probability, int multiplication, int additions) {
-        this.probability = probability;
-        this.mul = multiplication;
-        this.add = additions;
-    }
-
-    public double getProbability() {
-        return probability;
-    }
-
-    public int getMul() {
-        return mul;
-    }
-
-    public int getAdd() {
-        return add;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%.5f,%d,%d", this.probability, this.add, this.mul);
-    }
-}
