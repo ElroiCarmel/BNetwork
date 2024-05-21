@@ -3,18 +3,19 @@ import java.util.*;
 public abstract class QueryFactory {
 
     public static ProQuery parseToProQuery(String s, BayesianNetwork bn) throws NoSuchElementException{
+        String messageFormat = "No Variable with name \"%s\" in the network";
         ProQuery ans = new ProQuery();
         int i = s.indexOf('('), j = s.indexOf('|'), k = s.indexOf(')');
         String targetStr = s.substring(i+1, j), evidenceStr = s.substring(j+1, k);
         String[] tarSplt = targetStr.split("=");
         Variable tarVar = bn.getVar(tarSplt[0]);
-        if (tarVar == null) throw new NoSuchElementException();
+        if (tarVar == null) throw new NoSuchElementException(String.format(messageFormat, tarSplt[0]));
         ans.setTarget(tarVar, tarSplt[1]);
         String[] evSplt = evidenceStr.split(",");
         for (String ev : evSplt) {
             String[] split = ev.split("=");
             Variable evidVar = bn.getVar(split[0]);
-            if (evidVar == null) throw new NoSuchElementException();
+            if (evidVar == null) throw new NoSuchElementException(String.format(messageFormat, split[0]));
             ans.addEvidence(evidVar, split[1]);
         }
         if (k < s.length() - 2) {
@@ -22,14 +23,15 @@ public abstract class QueryFactory {
             String[] hidSplt = hidStr.split("-");
             for (String hid : hidSplt) {
                 Variable hidVar = bn.getVar(hid);
-                if (hidVar == null) throw new NoSuchElementException();
+                if (hidVar == null) throw new NoSuchElementException(String.format(messageFormat, hid));
                 ans.addHidden(hidVar);
             }
         }
         return ans;
     }
 
-    public static IndQuery parseToIndQuery(String s, BayesianNetwork bn) throws NoSuchElementException{
+    public static IndQuery parseToIndQuery(String s, BayesianNetwork bn) throws NoSuchElementException {
+        String messageFormat = "No Variable with name \"%s\" in the network";
         int i = s.indexOf("|");
         String targetStr = s.substring(0, i);
         IndQuery ans = new IndQuery();
@@ -38,7 +40,7 @@ public abstract class QueryFactory {
         int j = 0;
         for (String tar : targetSplt) {
             Variable v = bn.getVar(tar);
-            if (v == null) throw new NoSuchElementException();
+            if (v == null) throw new NoSuchElementException(String.format(messageFormat, tar));
             tarVars[j++] = v;
         }
         ans.setTwoVars(tarVars);
@@ -48,7 +50,7 @@ public abstract class QueryFactory {
             for (String obsStr : obsSplt) {
                 String varName = obsStr.split("=")[0];
                 Variable v = bn.getVar(varName);
-                if (v == null) throw new NoSuchElementException();
+                if (v == null) throw new NoSuchElementException(String.format(messageFormat, varName));
                 ans.addObserved(v);
             }
         }
