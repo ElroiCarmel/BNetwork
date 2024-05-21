@@ -195,10 +195,6 @@ public class Factor implements Comparable<Factor> {
         return ans;
     }
 
-    public double[] getTable() {
-        return this.probTable;
-    }
-
     public List<Variable> getVariables() {
         return this.variables;
     }

@@ -243,7 +243,6 @@ public class BayesianNetwork {
     }
 
     private ProResult answer(ProQuery query) {
-        // TODO Test the cpt check works fine
         Variable varTarget = query.getTarget().keySet().toArray(new Variable[0])[0];
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
@@ -360,11 +359,6 @@ public class BayesianNetwork {
             if (bb[v.getID()] && bfs[v.getID()]) ans.add(v);
         }
         return ans;
-    }
-
-
-    public HashMap<String, Variable> getVarMap() {
-        return this.varMap;
     }
 
     public Variable getVar(String s) {

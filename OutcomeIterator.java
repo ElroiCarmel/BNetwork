@@ -1,5 +1,4 @@
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -77,12 +76,4 @@ public class OutcomeIterator implements Iterator<String[]> {
         this.counter++;
         this.hasNext = this.counter < maxIterations;
     }
-
-//    public String[] getAsStrings() {
-//        for (int i = 0; i < currentState.length; i++) {
-//            String s = currentVars[i].getOutcomes().get(currentState[i]);
-//            currentStateString[i] = s;
-//        }
-//        return currentStateString;
-//    }
 }
