@@ -4,19 +4,26 @@ public abstract class QueryFactory {
 
     public static ProQuery parseToProQuery(String s, BayesianNetwork bn) throws NoSuchElementException{
         String messageFormat = "No Variable with name \"%s\" in the network";
+        String noStateMessage = "No outcome \"%s\" for the variable \"%s\"";
         ProQuery ans = new ProQuery();
         int i = s.indexOf('('), j = s.indexOf('|'), k = s.indexOf(')');
-        String targetStr = s.substring(i+1, j), evidenceStr = s.substring(j+1, k);
+        String targetStr = s.substring(i+1, (j>=0) ? j : k);
         String[] tarSplt = targetStr.split("=");
         Variable tarVar = bn.getVar(tarSplt[0]);
         if (tarVar == null) throw new NoSuchElementException(String.format(messageFormat, tarSplt[0]));
+        if (!tarVar.containState(tarSplt[1])) throw new NoSuchElementException(String.format(noStateMessage, tarSplt[1], tarSplt[0]));
         ans.setTarget(tarVar, tarSplt[1]);
-        String[] evSplt = evidenceStr.split(",");
-        for (String ev : evSplt) {
-            String[] split = ev.split("=");
-            Variable evidVar = bn.getVar(split[0]);
-            if (evidVar == null) throw new NoSuchElementException(String.format(messageFormat, split[0]));
-            ans.addEvidence(evidVar, split[1]);
+        if (j >= 0) {
+            String evidenceStr = s.substring(j+1, k);
+            String[] evSplt = evidenceStr.split(",");
+            for (String ev : evSplt) {
+                String[] split = ev.split("=");
+                Variable evidVar = bn.getVar(split[0]);
+                if (evidVar == null) throw new NoSuchElementException(String.format(messageFormat, split[0]));
+                if (!evidVar.containState(split[1]))
+                    throw new NoSuchElementException(String.format(noStateMessage, split[1], split[0]));
+                ans.addEvidence(evidVar, split[1]);
+            }
         }
         if (k < s.length() - 2) {
             String hidStr = s.substring(k+2);
