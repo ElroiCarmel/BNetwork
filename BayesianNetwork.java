@@ -365,5 +365,9 @@ public class BayesianNetwork {
         return this.varMap.get(s);
     }
 
+    @Override
+    public String toString() {
+        return varMap.values().toString();
+    }
 }
 
