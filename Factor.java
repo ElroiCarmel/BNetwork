@@ -1,7 +1,4 @@
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Factor implements Comparable<Factor> {
     // DATA
@@ -208,10 +205,10 @@ public class Factor implements Comparable<Factor> {
     }
 
     @Override
-    public int compareTo(Factor o) {
-        if (this.size() == o.size()) {
-            return this.compASCII - o.compASCII;
+    public int compareTo(Factor other) {
+        if (this.size() == other.size()) {
+            return this.compASCII - other.compASCII;
         }
-        return this.size() - o.size();
+        return this.size() - other.size();
     }
 }

@@ -19,7 +19,7 @@ public class OutcomeIterator implements Iterator<String[]> {
     }
 
     private void configuration(List<Variable> vars) {
-        currentVars = vars.toArray(vars.toArray(new Variable[0]));
+        currentVars = vars.toArray(new Variable[0]);
         currentStateString = new String[vars.size()];
         currentState = new int[vars.size()];
         currentState[currentState.length-1] = -1;
