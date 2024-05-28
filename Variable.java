@@ -72,4 +72,8 @@ public class Variable {
     public int getOutcomeIndex(String s) {
         return this.outcomes.indexOf(s);
     }
+
+    public boolean containState(String s) {
+        return this.outcomes.contains(s);
+    }
 }
