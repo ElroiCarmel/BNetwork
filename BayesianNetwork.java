@@ -130,7 +130,6 @@ public class BayesianNetwork {
      * Index in the array stand for the correspondent variable ID
      */
     private boolean[] bayesBall(Variable source, Collection<Variable> evidence) {
-        Set<Variable> result = new HashSet<>();
         int size = this.varMap.size();
         boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
         Arrays.fill(visited, false);

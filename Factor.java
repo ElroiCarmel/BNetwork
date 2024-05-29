@@ -142,7 +142,7 @@ public class Factor implements Comparable<Factor> {
     public static int multiply(Queue<Factor> factors) {
         int ans = 0;
         while (factors.size() > 1) {
-            Factor f1 = factors.poll(), f2 = factors.poll();
+            Factor f1 = factors.remove(), f2 = factors.remove();
             Factor product = f1.multiply(f2);
             ans += product.size();
             factors.add(product);
