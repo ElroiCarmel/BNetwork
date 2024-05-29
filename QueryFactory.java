@@ -100,19 +100,19 @@ class IndQuery {
 }
 
 class ProQuery {
-    private HashMap<Variable, String> target, evidence;
+    private Variable targetVar;
+    private String targetState;
+    private HashMap<Variable, String> evidence = null;
     private Queue<Variable> hidden = null;
 
-    public ProQuery() {
-        this.target = new HashMap<>();
-        this.evidence = new HashMap<>();
-    }
 
     public void setTarget(Variable var, String outcome) {
-        this.target.put(var, outcome);
+        this.targetVar = var;
+        this.targetState = outcome;
     }
 
     public void addEvidence(Variable v, String outcome) {
+        if (evidence == null) evidence = new HashMap<>();
         this.evidence.put(v, outcome);
     }
 
@@ -121,8 +121,12 @@ class ProQuery {
         this.hidden.add(v);
     }
 
-    public HashMap<Variable, String> getTarget() {
-        return target;
+    public Variable getTargetVar() {
+        return this.targetVar;
+    }
+
+    public String getTargetState() {
+        return this.targetState;
     }
 
     public HashMap<Variable, String> getEvidence() {

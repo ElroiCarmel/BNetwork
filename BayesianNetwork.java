@@ -129,7 +129,7 @@ public class BayesianNetwork {
      * @return Boolean array that states "true" if the ball passed through that variable and "false" otherwise.
      * Index in the array stand for the correspondent variable ID
      */
-    private boolean[] bayesBall(Variable source, List<Variable> evidence) {
+    private boolean[] bayesBall(Variable source, Collection<Variable> evidence) {
         Set<Variable> result = new HashSet<>();
         int size = this.varMap.size();
         boolean[] visited = new boolean[size], markedTop = new boolean[size], markedBottom = new boolean[size], observed = new boolean[size];
@@ -243,7 +243,7 @@ public class BayesianNetwork {
     }
 
     private ProResult answer(ProQuery query) {
-        Variable varTarget = query.getTarget().keySet().toArray(new Variable[0])[0];
+        Variable varTarget = query.getTargetVar();
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
         HashMap<Variable, String> ev = query.getEvidence();
@@ -253,11 +253,11 @@ public class BayesianNetwork {
                 state.add(ev.get(v));
             }
             state.removeLast();
-            state.add(query.getTarget().values().toArray(new String[0])[0]);
+            state.add(query.getTargetState());
             double pr = cpt.getProb(state);
             return new ProResult(pr, 0, 0);
         } else {
-            return answerByVE(query.getTarget(), query.getEvidence(), query.getHidden());
+            return answerByVE(query.getTargetVar(), query.getTargetState(), query.getEvidence(), query.getHidden());
         }
     }
 
@@ -268,14 +268,8 @@ public class BayesianNetwork {
         return !visited[dest.getID()];
     }
 
-    private ProResult answerByVE(HashMap<Variable, String> target, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
-
-        Variable vtemp = target.keySet().toArray(new Variable[0])[0];
-        List<Variable> evidencetemp = new LinkedList<>(evidence.keySet());
-
-        List<Variable> filtered = getRelevantNodes(vtemp, evidencetemp);
-
-
+    private ProResult answerByVE(Variable target, String tarState, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
+        List<Variable> filtered = getRelevantNodes(target, evidence.keySet());
 
         int mulCount = 0, addCount = 0;
         // 1. Construct a factor for each relevant node in the network
@@ -326,7 +320,7 @@ public class BayesianNetwork {
                 if (!pq.isEmpty()) {
                     mulCount += Factor.multiply(pq);
                     // Priority queue should contain only 1 element
-                    Factor f = pq.poll();
+                    Factor f = pq.remove();
                     Factor afterSummation = f.sumOut(toEliminate);
                     if (afterSummation != null) {
                         addCount += afterSummation.size() * (toEliminate.size() - 1);
@@ -342,14 +336,14 @@ public class BayesianNetwork {
         pq.addAll(factors);
         mulCount += Factor.multiply(pq);
         // 5. Normalize the factor
-        Factor last = pq.poll().normalize();
-        addCount += vtemp.size() - 1;
-        double ans = last.getProb(Arrays.asList(target.values().iterator().next()));
+        Factor last = pq.remove().normalize();
+        addCount += target.size() - 1;
+        double ans = last.getProb(Arrays.asList(tarState));
 
         return new ProResult(ans, mulCount, addCount);
     }
 
-    private List<Variable> getRelevantNodes(Variable query, List<Variable> evidence) {
+    private List<Variable> getRelevantNodes(Variable query, Collection<Variable> evidence) {
         boolean[] bb = bayesBall(query, evidence);
         List<Variable> src = new LinkedList<>(evidence);
         src.add(query);
