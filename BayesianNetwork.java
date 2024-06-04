@@ -243,17 +243,13 @@ public class BayesianNetwork {
 
     private ProResult answer(ProQuery query) {
         Variable varTarget = query.getTargetVar();
+        String varState = query.getTargetState();
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
         HashMap<Variable, String> ev = query.getEvidence();
         if (parents!= null && ev!= null && parents.size() == ev.size() && parents.containsAll(ev.keySet())) {
-            LinkedList<String> state = new LinkedList<>();
-            for (Variable v : cpt.getVariables()) {
-                state.add(ev.get(v));
-            }
-            state.removeLast();
-            state.add(query.getTargetState());
-            double pr = cpt.getProb(state);
+            ev.put(varTarget, varState);
+            double pr = cpt.getProb(ev);
             return new ProResult(pr, 0, 0);
         } else {
             return answerByVE(query.getTargetVar(), query.getTargetState(), query.getEvidence(), query.getHidden());
