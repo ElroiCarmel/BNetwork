@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Factor implements Comparable<Factor> {
     // DATA
@@ -36,7 +37,7 @@ public class Factor implements Comparable<Factor> {
         for (Variable variable : variables) {
             String name = variable.getName();
             for (int i = 0; i < name.length(); i++) {
-                compASCII += (int) name.charAt(i);
+                compASCII += name.charAt(i);
             }
         }
     }
@@ -55,10 +56,10 @@ public class Factor implements Comparable<Factor> {
 
     private int getIndex(List<String> state) {
         int[] indices = new int[state.size()];
-        for (int i = 0; i < state.size(); i++) {
-            String s = state.get(i);
-            Variable v = this.variables.get(i);
-            indices[i] = v.getOutcomeIndex(s);
+        int j = 0;
+        for (String s : state) {
+            Variable v = variables.get(j);
+            indices[j++] = v.getOutcomeIndex(s);
         }
         int ans = 0;
         for (int i = 0; i < state.size(); i++) {
@@ -192,16 +193,37 @@ public class Factor implements Comparable<Factor> {
         return ans;
     }
 
-    public List<Variable> getVariables() {
-        return this.variables;
-    }
-
     public int size() {
         return this.probTable.length;
     }
 
     public boolean contains(Variable v) {
         return variables.contains(v);
+    }
+
+    public double getProb(Map<Variable, String> q) {
+        List<String> helper = new LinkedList<>();
+        for (Variable v : this.variables) {
+            String state = q.get(v);
+            helper.add(state);
+        }
+        return this.getProb(helper);
+    }
+
+    @Override
+    public String toString() {
+        String temp = "Variables: ";
+        temp += variables.stream().map(Variable::getName).collect(Collectors.joining(", "));
+        StringJoiner sj = new StringJoiner("\n");
+        sj.add(temp);
+        OutcomeIterator it = OutcomeIterator.getInstance(this.variables);
+        int i = 0;
+        while (it.hasNext()) {
+            String[] state = it.next();
+            String s = Arrays.toString(state) + " -> " + String.format("%.5f", probTable[i++]);
+            sj.add(s);
+        }
+        return sj.toString();
     }
 
     @Override
