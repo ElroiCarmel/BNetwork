@@ -102,17 +102,17 @@ class IndQuery {
 class ProQuery {
     private Variable targetVar;
     private String targetState;
-    private HashMap<Variable, String> evidence = null;
+    private HashMap<Variable, String> evidence;
     private Queue<Variable> hidden = null;
 
 
     public void setTarget(Variable var, String outcome) {
         this.targetVar = var;
         this.targetState = outcome;
+        this.evidence = new HashMap<>();
     }
 
     public void addEvidence(Variable v, String outcome) {
-        if (evidence == null) evidence = new HashMap<>();
         this.evidence.put(v, outcome);
     }
 
