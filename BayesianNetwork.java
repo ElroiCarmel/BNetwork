@@ -154,7 +154,7 @@ public class BayesianNetwork {
         while (!scheduled.isEmpty()) {
             Variable var = scheduled.poll();
             int i = var.getID();
-            boolean from = fromWhom.poll();
+            boolean from = fromWhom.remove();
 
             visited[i] = true;
 
@@ -247,7 +247,9 @@ public class BayesianNetwork {
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
         HashMap<Variable, String> ev = query.getEvidence();
-        if (parents!= null && ev!= null && parents.size() == ev.size() && parents.containsAll(ev.keySet())) {
+        boolean ansInCptFlag1 = ev.isEmpty() && parents == null;
+        boolean ansInCptFlag2 = parents != null && new HashSet<>(parents).equals(ev.keySet());
+        if (ansInCptFlag1 || ansInCptFlag2) {
             ev.put(varTarget, varState);
             double pr = cpt.getProb(ev);
             return new ProResult(pr, 0, 0);
