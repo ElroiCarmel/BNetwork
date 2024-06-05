@@ -5,14 +5,11 @@ public class Factor implements Comparable<Factor> {
     // DATA
     private ArrayList<Variable> variables; // The ORDER of the vars is crucial
     private double[] probTable;
-    private int[] indexScale;
-    private int compASCII = 0;
 
     // CONSTRUCTORS
     public Factor(List<Variable> variables, double[] prob) {
         this.variables = new ArrayList<>(variables);
         this.probTable = Arrays.copyOf(prob, prob.length);
-        setIndexScale(); setComparingHelper();
     }
 
     public Factor(List<Variable> variables) {
@@ -22,49 +19,25 @@ public class Factor implements Comparable<Factor> {
             len = len * v.size();
         }
         this.probTable = new double[len];
-        setIndexScale(); setComparingHelper();
     }
 
     // Copy constructor
     public Factor(Factor f){
         this.variables = new ArrayList<>(f.variables);
         this.probTable = Arrays.copyOf(f.probTable, f.probTable.length);
-        this.indexScale = Arrays.copyOf(f.indexScale, f.indexScale.length);
-        this.compASCII = f.compASCII;
-    }
-
-    private void setComparingHelper() {
-        for (Variable variable : variables) {
-            String name = variable.getName();
-            for (int i = 0; i < name.length(); i++) {
-                compASCII += name.charAt(i);
-            }
-        }
-    }
-
-    private void setIndexScale() {
-        int len = variables.size();
-        this.indexScale = new int[len];
-        int product = 1;
-        for (int i = len - 1; i >= 0 ; i--) {
-            this.indexScale[i] = product;
-            product *= this.variables.get(i).size();
-        }
     }
 
     // METHODS
 
     private int getIndex(List<String> state) {
-        int[] indices = new int[state.size()];
-        int j = 0;
-        for (String s : state) {
-            Variable v = variables.get(j);
-            indices[j++] = v.getOutcomeIndex(s);
+        int ans = 0, i = 0;
+        Iterator<String> strIt = state.iterator();
+        while (strIt.hasNext() && i < variables.size() - 1) {
+            int ind = variables.get(i).getOutcomeIndex(strIt.next());
+            ans = variables.get(i+1).size() * (ans + ind);
+            i++;
         }
-        int ans = 0;
-        for (int i = 0; i < state.size(); i++) {
-            ans += indices[i] * this.indexScale[i];
-        }
+        ans += variables.get(i).getOutcomeIndex(strIt.next());
         return ans;
     }
 
@@ -229,7 +202,9 @@ public class Factor implements Comparable<Factor> {
     @Override
     public int compareTo(Factor other) {
         if (this.size() == other.size()) {
-            return this.compASCII - other.compASCII;
+            int f1 = this.variables.stream().map(Variable::getName).flatMapToInt(String::chars).sum();
+            int f2 = other.variables.stream().map(Variable::getName).flatMapToInt(String::chars).sum();
+            return f1 - f2;
         }
         return this.size() - other.size();
     }
