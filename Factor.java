@@ -91,11 +91,9 @@ public class Factor implements Comparable<Factor> {
 
         OutcomeIterator it = OutcomeIterator.getInstance(f2Vars);
         while (it.hasNext()) {
-            String[] curr = it.next();
-            for (String s : curr) {
-                generated.add(s);
-                original.add(s);
-            }
+            ArrayList<String> curr = it.next();
+            generated.addAll(curr); original.addAll(curr);
+
             original.add(varIndex, state);
             double retrieved = this.getProb(original);
             ans.setProb(generated, retrieved);
@@ -120,9 +118,9 @@ public class Factor implements Comparable<Factor> {
         OutcomeIterator it = OutcomeIterator.getInstance(f2Vars);
         while (it.hasNext()) {
             varOutcomeIT = varOutcomes.iterator();
-            String[] curr = it.next();
+            ArrayList<String> curr = it.next();
             double pr = 0;
-            helper.addAll(Arrays.asList(curr));
+            helper.addAll(curr);
             while (varOutcomeIT.hasNext()) {
                 String outcome = varOutcomeIT.next();
                 helper.add(varIndex, outcome);
@@ -169,14 +167,14 @@ public class Factor implements Comparable<Factor> {
         List<String> leftOutcome = new LinkedList<>(), rightOutcome = new LinkedList<>(), unionOutcome = new ArrayList<>();
 
         while (it.hasNext()) {
-            String[] outcome = it.next();
-            unionOutcome.addAll(Arrays.asList(outcome));
-            for (Integer leftIndex : leftIndices) {
-                leftOutcome.add(outcome[leftIndex]);
+            ArrayList<String> outcome = it.next();
+            unionOutcome.addAll(outcome);
+            for (int leftIndex : leftIndices) {
+                leftOutcome.add(outcome.get(leftIndex));
             }
 
-            for (Integer rightIndex : rightIndices) {
-                rightOutcome.add(outcome[rightIndex]);
+            for (int rightIndex : rightIndices) {
+                rightOutcome.add(outcome.get(rightIndex));
             }
             double p1 = this.getProb(leftOutcome), p2 = f.getProb(rightOutcome);
             ans.setProb(unionOutcome, p1 * p2);
@@ -219,8 +217,8 @@ public class Factor implements Comparable<Factor> {
         OutcomeIterator it = OutcomeIterator.getInstance(this.variables);
         int i = 0;
         while (it.hasNext()) {
-            String[] state = it.next();
-            String s = Arrays.toString(state) + " -> " + String.format("%.5f", probTable[i++]);
+            ArrayList<String> state = it.next();
+            String s = state + " -> " + String.format("%.5f", probTable[i++]);
             sj.add(s);
         }
         return sj.toString();

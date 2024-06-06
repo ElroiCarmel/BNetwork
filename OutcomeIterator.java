@@ -1,15 +1,14 @@
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class OutcomeIterator implements Iterator<String[]> {
+public class OutcomeIterator implements Iterator<ArrayList<String>> {
 
     private static final OutcomeIterator instance = new OutcomeIterator();
-    private int[] currentState, max;
-    private String[] currentStateString;
-    private int maxIterations, counter;
-    private boolean hasNext;
-    private Variable[] currentVars;
+    private final ArrayList<Integer> currentState = new ArrayList<>();
+    private final ArrayList<String> currentStateString = new ArrayList<>();
+    private final ArrayList<Variable> currentVars = new ArrayList<>();
 
 
 
@@ -19,20 +18,14 @@ public class OutcomeIterator implements Iterator<String[]> {
     }
 
     private void configuration(List<Variable> vars) {
-        currentVars = vars.toArray(new Variable[0]);
-        currentStateString = new String[vars.size()];
-        currentState = new int[vars.size()];
-        currentState[currentState.length-1] = -1;
-        hasNext = true;
-        max = new int[vars.size()];
-        maxIterations = 1;
-        counter = 0;
-        int i = 0;
-        for (Variable var : vars) {
-            max[i] = var.size();
-            maxIterations *= max[i];
-            i++;
+        currentVars.clear(); currentVars.addAll(vars);
+        currentStateString.clear();
+        currentState.clear();
+        for (int i = 0; i < vars.size(); i++) {
+            currentState.add(0);
+            currentStateString.add("-");
         }
+        currentState.set(currentState.size() - 1, -1);
     }
 
     private OutcomeIterator() {}
@@ -46,7 +39,10 @@ public class OutcomeIterator implements Iterator<String[]> {
      */
     @Override
     public boolean hasNext() {
-        return this.hasNext;
+        for (int i = 0; i < currentState.size(); i++) {
+            if (currentState.get(i) < currentVars.get(i).size() - 1) return true;
+        }
+        return false;
     }
 
     /**
@@ -56,24 +52,22 @@ public class OutcomeIterator implements Iterator<String[]> {
      * @throws NoSuchElementException if the iteration has no more elements
      */
     @Override
-    public String[] next() throws NoSuchElementException {
-        if (!hasNext) throw new NoSuchElementException();
+    public ArrayList<String> next() throws NoSuchElementException {
+        if (!hasNext()) throw new NoSuchElementException();
         increment();
-        for (int i = 0; i < currentState.length; i++) {
-            String s = currentVars[i].getOutcomes().get(currentState[i]);
-            currentStateString[i] = s;
+        for (int i = 0; i < currentState.size(); i++) {
+            String s = currentVars.get(i).getOutcomes().get(currentState.get(i));
+            currentStateString.set(i, s);
         }
         return this.currentStateString;
     }
 
     private void increment() {
-        for (int i = currentState.length - 1; i >= 0; i--) {
-            currentState[i]++;
-            if (currentState[i] >= max[i]) {
-                currentState[i] = 0;
+        for (int i = currentState.size() - 1; i >= 0; i--) {
+            currentState.set(i, currentState.get(i) + 1);
+            if (currentState.get(i) >= currentVars.get(i).size()) {
+                currentState.set(i, 0);
             } else break;
         }
-        this.counter++;
-        this.hasNext = this.counter < maxIterations;
     }
 }
