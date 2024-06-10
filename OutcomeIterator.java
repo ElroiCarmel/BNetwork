@@ -3,8 +3,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/**
+ * An Iterator implementation to create a straight-forward approach to iterate over
+ * all possible permutations of a given group of variables. Useful mainly for operations
+ * between 2 factors.
+ * For example: Let {A,B,C} be Random variables so that the possible outcomes for each one is {T, F}.
+ * The class will iterate from the [T,T,T], [T,T,F], .... till [F,F,F].
+ */
 public class OutcomeIterator implements Iterator<ArrayList<String>> {
-
+    /**
+     * The class uses the Singleton design pattern
+     */
     private static final OutcomeIterator instance = new OutcomeIterator();
     private final ArrayList<Integer> currentState = new ArrayList<>();
     private final ArrayList<String> currentStateString = new ArrayList<>();
@@ -17,6 +26,11 @@ public class OutcomeIterator implements Iterator<ArrayList<String>> {
         return instance;
     }
 
+    /**
+     * In order to reduce space-complexity the class will be using ArrayLists so before
+     * the iterations begin the data-structures needs to be cleared and set at the right sizes
+     * @param vars List of the variable to iterate over their outcomes
+     */
     private void configuration(List<Variable> vars) {
         currentVars.clear(); currentVars.addAll(vars);
         currentStateString.clear();
@@ -62,6 +76,10 @@ public class OutcomeIterator implements Iterator<ArrayList<String>> {
         return this.currentStateString;
     }
 
+    /**
+     * An iterative (not recursive) approach for iterating over the cartesian product of
+     * the variables outcomes
+     */
     private void increment() {
         for (int i = currentState.size() - 1; i >= 0; i--) {
             currentState.set(i, currentState.get(i) + 1);

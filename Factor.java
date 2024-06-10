@@ -1,6 +1,14 @@
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * A representation for the table that consists of series of possible outcomes of this
+ * table's variables and the correspondent probability. The inspiration for the internal
+ * logic was from binary representation of numbers.
+ * Example: If the factors consists of random variables A,B,C so that {T, F} are the possible
+ * outcomes for each, then index 0 stands for the [T,T,T] combination, 1 for [T,T,F] and so on
+ * till 7 for [F,F,F] combination.
+ */
 public class Factor implements Comparable<Factor> {
     // DATA
     private ArrayList<Variable> variables; // The ORDER of the vars is crucial
@@ -14,6 +22,7 @@ public class Factor implements Comparable<Factor> {
 
     public Factor(List<Variable> variables) {
         this.variables = new ArrayList<>(variables);
+        // size = |{v1_outcomes}x{v2_outcomes}...x{vn_outcomes}|
         int len = 1;
         for (Variable v : variables) {
             len = len * v.size();
@@ -51,6 +60,14 @@ public class Factor implements Comparable<Factor> {
         this.probTable[index] = num;
     }
 
+    /**
+     * This operation creates a new Factor only with the relevant probabilities,
+     * where state of {@code var} is fixed on the desired state
+     * @param var The variable to be restricted
+     * @param state The wanted outcome
+     * @return A new Factor consists of the relevant probabilities without
+     * the restricted variable
+     */
     public Factor restrict(Variable var, String state) {
         if (this.variables.size() == 1) return null;
 
@@ -76,6 +93,11 @@ public class Factor implements Comparable<Factor> {
         return ans;
     }
 
+    /**
+     * This operation sums a specific variable probabilities from the factor
+     * @param var The variable target to be summed out
+     * @return A new, updated Factor
+     */
     public Factor sumOut(Variable var) {
         if (this.variables.size() == 1) return null;
 
@@ -122,6 +144,12 @@ public class Factor implements Comparable<Factor> {
         return ans;
     }
 
+    /**
+     * Combines two factors into a single factor by performing the join operation.
+     * @param f The second Factor to be joined
+     * @return A new Factor instance that represents the combined probabilities of the input factors
+     * over their common and unique variables.
+     */
     public Factor multiply(Factor f) {
         Set<Variable> union = new LinkedHashSet<>(this.variables); union.addAll(f.variables);
         List<Variable> unionL = new LinkedList<>(union);
@@ -157,6 +185,10 @@ public class Factor implements Comparable<Factor> {
         return ans;
     }
 
+    /**
+     * Normalize the probabilities
+     * @return New normalized equivalent Factor
+     */
     public Factor normalize() {
         Factor ans = new Factor(this);
         double sum = Arrays.stream(ans.probTable).sum();

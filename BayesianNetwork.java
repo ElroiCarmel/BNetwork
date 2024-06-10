@@ -131,7 +131,6 @@ public class BayesianNetwork {
      * Implementation of Bayes-Ball algorithm to detect dependency relations
      * between variables at the bayesian network. Will be used for Queries.
      * I made the version for a single source variable
-     *
      * @param source   The ball starts at the source variable
      * @param evidence List of the observed variables
      * @return Boolean array that states "true" if the ball passed through that variable and "false" otherwise.
@@ -312,7 +311,6 @@ public class BayesianNetwork {
             }
         }
 
-
         /*
            3. Eliminate each hidden variable X:
             - Multiply all factors that contain X
@@ -359,7 +357,7 @@ public class BayesianNetwork {
      * Filter out the variables that are independent of the target variable given the
      * evidence variables using the bayesBall algorithm and the variables that are not
      * ancestors of target or evidence variables using the reversedBFS algorithm. Used typically
-     * by the VariableElimination algorithm
+     * by the {@code answerByVE} function
      * @param query The target variable
      * @param evidence The evidence variables
      * @return List of all the relevant nodes
