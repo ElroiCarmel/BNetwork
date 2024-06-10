@@ -2,10 +2,15 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Implementation of Random Variable at BayesianNetwork
+ */
 public class Variable {
-    // data
     private final int ID;
     private String name;
+    /**
+     * Probability of the variable is affected by the state of its parents variables.
+     */
     private List<Variable> parents = null, children = null;
     private List<String> outcomes;
     private Factor cpt;
@@ -55,6 +60,7 @@ public class Variable {
         return this.ID;
     }
 
+    // The size of a variable is defined as its outcomes length
     public int size() {
         return this.outcomes.size();
     }
@@ -65,9 +71,14 @@ public class Variable {
 
     @Override
     public String toString() {
-        return "Name: " + name + ". Outcomes: " + outcomes;
+        return  name;
     }
 
+    /**
+     * Get the index of the given outcome in this variable outcomes list
+     * @param s The desired outcome
+     * @return The index
+     */
     public int getOutcomeIndex(String s) {
         return this.outcomes.indexOf(s);
     }

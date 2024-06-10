@@ -11,12 +11,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Implementation of the Bayesian Network model. The net consists of Random Variables.
+ * Connection between variables implies a probability dependency relation. If there is
+ * an edge from variable X to variable Y, it means that the probability of Y depends on
+ * the outcome of variable X.
+ */
 public class BayesianNetwork {
-    // DATA
+    // Key: Variable name
     private HashMap<String, Variable> varMap;
 
-
-    // CONSTRUCTOR
+    /**
+     *
+     * @param path The path to the XML file which represents the neetwork
+     */
     public BayesianNetwork(String path) {
         this.varMap = new HashMap<>();
         constructFromXML(path);
@@ -121,7 +129,7 @@ public class BayesianNetwork {
 
     /**
      * Implementation of Bayes-Ball algorithm to detect dependency relations
-     * between variables in the bayesian network. Will be used for Queries.
+     * between variables at the bayesian network. Will be used for Queries.
      * I made the version for a single source variable
      *
      * @param source   The ball starts at the source variable
@@ -208,6 +216,12 @@ public class BayesianNetwork {
         return visited;
     }
 
+
+    /**
+     * Check who are the ancestors of selected variables
+     * @param sources Normally the evidence and the query variables
+     * @return A boolean array. True means the variable is an ancestor of one of the sources
+     */
     private boolean[] reversedBFS(List<Variable> sources) {
         boolean[] visited = new boolean[this.varMap.size()];
         Arrays.fill(visited, false);
@@ -247,6 +261,7 @@ public class BayesianNetwork {
         Factor cpt = varTarget.getCpt();
         List<Variable> parents = varTarget.getParents();
         HashMap<Variable, String> ev = query.getEvidence();
+        // Checks whether the answer lies in the variable's CPT
         boolean ansInCptFlag1 = ev.isEmpty() && parents == null;
         boolean ansInCptFlag2 = parents != null && new HashSet<>(parents).equals(ev.keySet());
         if (ansInCptFlag1 || ansInCptFlag2) {
@@ -268,7 +283,7 @@ public class BayesianNetwork {
     private ProResult answerByVE(Variable target, String tarState, HashMap<Variable, String> evidence, Queue<Variable> hidden) {
         List<Variable> filtered = getRelevantNodes(target, evidence.keySet());
 
-        int mulCount = 0, addCount = 0;
+        int mulCount = 0, addCount = 0; // Count the additions and multiplication during the process
         // 1. Construct a factor for each relevant node in the network
         List<Factor> factors = new LinkedList<>();
         for (Variable v : filtered) {
@@ -340,6 +355,15 @@ public class BayesianNetwork {
         return new ProResult(ans, mulCount, addCount);
     }
 
+    /**
+     * Filter out the variables that are independent of the target variable given the
+     * evidence variables using the bayesBall algorithm and the variables that are not
+     * ancestors of target or evidence variables using the reversedBFS algorithm. Used typically
+     * by the VariableElimination algorithm
+     * @param query The target variable
+     * @param evidence The evidence variables
+     * @return List of all the relevant nodes
+     */
     private List<Variable> getRelevantNodes(Variable query, Collection<Variable> evidence) {
         boolean[] bb = bayesBall(query, evidence);
         List<Variable> src = new LinkedList<>(evidence);
