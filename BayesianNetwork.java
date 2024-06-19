@@ -335,8 +335,6 @@ public class BayesianNetwork {
                     if (afterSummation != null) {
                         addCount += afterSummation.size() * (toEliminate.size() - 1);
                         factors.add(afterSummation);
-                    } else {
-                        addCount += toEliminate.size() - 1;
                     }
                 }
             }
@@ -346,8 +344,11 @@ public class BayesianNetwork {
         pq.addAll(factors);
         mulCount += Factor.multiply(pq);
         // 5. Normalize the factor
-        Factor last = pq.remove().normalize();
-        addCount += target.size() - 1;
+        Factor last = pq.remove();
+        if (mulCount > 0) {
+            last = last.normalize();
+            addCount += target.size() - 1;
+        }
         double ans = last.getProb(Arrays.asList(tarState));
 
         return new ProResult(ans, mulCount, addCount);
